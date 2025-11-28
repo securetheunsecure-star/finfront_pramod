@@ -1,0 +1,35 @@
+name: frontend-1.0.$(Build.BuildId)
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - '*.yml'
+variables:
+- name: artifactName
+  value: 'frontend'
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      name: student-lab-pool
+    steps:
+    - task: CmdLine@2
+      displayName: 'Package Frontend Files'
+      inputs:
+        script: |
+          echo "Packaging frontend app..."
+          mkdir $(Build.ArtifactStagingDirectory)/package
+          cp -r static $(Build.ArtifactStagingDirectory)/package/
+          cp -r templates $(Build.ArtifactStagingDirectory)/package/
+          cp app.py $(Build.ArtifactStagingDirectory)/package/
+          cp requirements.txt $(Build.ArtifactStagingDirectory)/package/
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/package'
+        artifact: '$(artifactName)'
+        publishLocation: 'pipeline'
+      displayName: 'Publish Frontend Pipeline Artifact'
+      condition: and(succeeded(), ne(variables['skip_build'], 'true'))
